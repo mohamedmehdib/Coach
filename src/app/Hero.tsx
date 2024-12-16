@@ -19,7 +19,7 @@ export default function Hero() {
     <div id="home" className={ms_madi+` md:h-screen bg-zinc-300 text-zinc-600 flex md:flex-row flex-col-reverse justify-between items-center md:p-10 p-5 pt-24 md:pt-0`}>
       <div className="md:w-1/2 pt-10">
         <p className="md:text-4xl text-3xl font-medium">
-          I'm{' '}
+          I&apos;m{' '}
           {isClient && (
             <ReactTyped
               className="text-zinc-500"
@@ -32,7 +32,7 @@ export default function Hero() {
           )}
         </p>
         <p className="text-lg md:text-2xl py-5 text-justify">
-          As a seasoned men's coach, I'm committed to helping ambitious men break through their limitations and achieve extraordinary results. I specialize in guiding men towards personal growth, leadership development, and relationship building. With a focus on practical strategies and mindset shifts, I empower my clients to live their best lives.
+          As a seasoned men&apos;s coach, I&apos;m committed to helping ambitious men break through their limitations and achieve extraordinary results. I specialize in guiding men towards personal growth, leadership development, and relationship building. With a focus on practical strategies and mindset shifts, I empower my clients to live their best lives.
         </p>
       </div>
       <div className="md:w-1/2 pb-14 md:pb-0">
