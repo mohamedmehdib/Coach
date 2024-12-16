@@ -41,16 +41,14 @@ export default function Navbar() {
 <div className={`fixed bg-gray-300 flex justify-between items-center h-20 md:h-24 w-screen lg:text-3xl md:text-2xl lg:px-12 px-8 z-10 ${scroll ? "text-zinc-600 shadow-xl" : "text-gray-300"} ${ul.className}`}>
   <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css"></link>
   
-  {/* Logo */}
   <span className={`${logo.className} lg:text-5xl text-4xl duration-300`}>Mohamed Gharieni</span>
   
-  {/* Desktop Navigation Links */}
   <ul className='hidden flex-row space-x-6 rounded-xl md:relative absolute md:flex'>
     <ScrollLink to="home" spy={true} smooth={true} offset={0} duration={500} className='hover:scale-125 hover:px-5 cursor-pointer my-auto duration-300'>
       <i className="uil uil-estate"></i> Home
     </ScrollLink>
     <ScrollLink to="study" spy={true} smooth={true} offset={-50} duration={500} className='hover:scale-125 hover:px-5 cursor-pointer my-auto duration-300'>
-      <i className="uil uil-book"></i> Study
+      <i className="uil uil-bag"></i> Services
     </ScrollLink>
     <ScrollLink to="contact" spy={true} smooth={true} offset={-50} duration={500} className='hover:scale-125 hover:px-5 cursor-pointer my-auto duration-300'>
       <i className="uil uil-envelope"></i> Contact
@@ -65,7 +63,6 @@ export default function Navbar() {
     </Link>
   </ul>
 
-  {/* Hamburger Menu (for mobile) */}
   <button onClick={() => setActive(!active)} className="block md:hidden text-3xl">
     {!active ? (
       <i className="uil uil-bars"></i>
@@ -74,17 +71,24 @@ export default function Navbar() {
     )}
   </button>
 
-  {/* Mobile Navigation Links */}
   <ul className={`shadow-xl duration-500 md:hidden bg-gray-300 flex flex-col space-y-5 text-center absolute top-20 md:top-24 w-full text-lg py-5 left-0 ${!active ? "-translate-x-full" : ""}`}>
     <ScrollLink to="home" spy={true} smooth={true} offset={0} duration={500}>
       <i className="uil uil-estate"></i> Home
     </ScrollLink>
     <ScrollLink to="study" spy={true} smooth={true} offset={50} duration={500}>
-      <i className="uil uil-book"></i> Study
+      <i className="uil uil-bag"></i> Services
     </ScrollLink>
     <ScrollLink to="contact" spy={true} smooth={true} offset={50} duration={500}>
       <i className="uil uil-envelope"></i> Contact
     </ScrollLink>
+    <Link href="/Profile">
+      <i className="uil uil-user-circle"></i>
+      {session ? (
+        <span>{firstName}</span>
+      ) : (
+        <span>Log in</span>
+      )}
+    </Link>
   </ul>
 </div>
 

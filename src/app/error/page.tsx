@@ -1,12 +1,8 @@
 "use client";
-import Link from "next/link";
 
-import { useSearchParams } from "next/navigation";
 import BackButton from "../BackButton";
 
 export default function ErrorPage() {
-  const searchParams = useSearchParams();
-  const message = searchParams?.get("message") || "An unexpected error occurred.";
 
   return (
     <div>

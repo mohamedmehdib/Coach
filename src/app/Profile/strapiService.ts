@@ -2,7 +2,7 @@ const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 const STRAPI_API_KEY = process.env.NEXT_PUBLIC_STRAPI_API_KEY;
 
 export async function emailExistsInStrapi(Email: string): Promise<boolean> {
-  const response = await fetch(`${STRAPI_API_URL}/user-emails?filters[Email][$eq]=${Email}`, {
+  const response = await fetch(`${STRAPI_API_URL}/user-emails?filters[email][$eq]=${Email}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -27,11 +27,8 @@ export async function addUserEmailToStrapi(name:string , email: string , service
     },
     body: JSON.stringify({
       data: {
-        Name : name ,
-        Email: email,
-        service1 : service1,
-        service2 : service2,
-        service3 : service3,
+        name : name ,
+        email: email,
       }
     })
   });

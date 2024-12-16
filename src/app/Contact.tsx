@@ -1,7 +1,5 @@
 "use client"
-import React, { useRef, useState } from 'react';
-
-const STRAPI_API_KEY = process.env.NEXT_PUBLIC_STRAPI_API_KEY;
+import React, { useState } from 'react';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -9,46 +7,43 @@ const Contact: React.FC = () => {
     email: '',
     message: '',
   });
-  const [status, setStatus] = useState('');
+
+
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus('Submitting...');
+    setLoading(true);
+
     try {
-      const response = await fetch('http://localhost:1337/api/contacts', { // Ensure the correct endpoint
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${STRAPI_API_KEY}`,
         },
-        body: JSON.stringify({ data: formData }),
+        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
-        setStatus('Message sent successfully!');
+        setSuccess(true);
         setFormData({ name: '', email: '', message: '' });
       } else {
-        setStatus('Failed to send message.');
+        throw new Error('Failed to submit');
       }
     } catch (error) {
-      console.error(error);
-      setStatus('An error occurred.');
+      console.error('Error submitting form:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const inputName = useRef<HTMLInputElement>(null);
-  const inputMail = useRef<HTMLInputElement>(null);
-  const inputMessage = useRef<HTMLTextAreaElement>(null);
-
-  const clear = () => {
-    if (inputName.current) inputName.current.value = '';
-    if (inputMail.current) inputMail.current.value = '';
-    if (inputMessage.current) inputMessage.current.value = '';
-  };
 
   return (
     <div id="contact" className="text-zinc-600 bg-gray-300 py-5">
@@ -73,13 +68,13 @@ const Contact: React.FC = () => {
           </div>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col md:w-1/2 space-y-5 p-4 md:p-12">
+          {success && <p className="text-zinc-600 text-center text-lg mt-2">Message sent successfully!</p>}
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
             required
-            ref={inputName}
             className="placeholder:text-gray-600 resize-none outline-none border-2 border-gray-600 bg-zinc-300 rounded-xl text-lg md:text-xl p-2 md:p-3"
             placeholder="Enter your name ..."
           />
@@ -89,7 +84,6 @@ const Contact: React.FC = () => {
             value={formData.email}
             onChange={handleChange}
             required
-            ref={inputMail}
             className="placeholder:text-gray-600 resize-none outline-none border-2 border-gray-600 bg-zinc-300 rounded-xl text-lg md:text-xl p-2 md:p-3"
             placeholder="Enter your email ..."
           />
@@ -98,19 +92,18 @@ const Contact: React.FC = () => {
             value={formData.message}
             onChange={handleChange}
             required
-            ref={inputMessage}
             className="placeholder:text-gray-600 resize-none outline-none border-2 border-gray-600 bg-zinc-300 rounded-xl text-lg md:text-xl p-2 md:p-3 h-60"
             placeholder="Enter your message ..."
           />
           <button
-            className="rounded-xl bg-gray-600 text-zinc-300 w-16 md:w-20 h-10 md:h-14 hover:scale-125 duration-300"
+            className="rounded-xl bg-gray-600 disabled:bg-gray-400 text-zinc-300 p-3 w-fit disabled:hover:scale-100 hover:scale-125 duration-300"
             type='submit'
+            disabled={loading}
           >
-            Send
+            {loading ? 'Submitting...' : 'Submit'}
           </button>
         </form>
       </div>
-      {status && <div className="text-center mt-4 text-lg md:text-xl">{status}</div>}
     </div>
   );
 };

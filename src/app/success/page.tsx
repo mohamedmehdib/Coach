@@ -2,17 +2,25 @@
 import { useEffect, useState } from "react";
 import BackButton from "../BackButton";
 import Loading from "../Loading";
+import { createClient } from "@sanity/client";
 
-const STRAPI_API_URL = "http://localhost:1337/api/histories";
-const STRAPI_API_KEY = process.env.NEXT_PUBLIC_STRAPI_API_KEY;
+const sanityClient = createClient({
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+  token: process.env.NEXT_PUBLIC_SANITY_TOKEN,
+  useCdn: false,
+  apiVersion: "2024-12-15",
+});
 
 const SuccessPage = () => {
   const [data, setData] = useState<any>(null);
 
+  const FLASK_API_URL = process.env.NEXT_PUBLIC_FLASK_API_URL
+
   useEffect(() => {
     const fetchPaymentData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/get-payment-data", {
+        const response = await fetch(`${FLASK_API_URL}/api/get-payment-data`, {
           method: "GET",
           credentials: "include",
         });
@@ -20,7 +28,7 @@ const SuccessPage = () => {
         if (response.ok) {
           const result = await response.json();
           setData(result);
-          await postDataToStrapi(result);
+          await postDataToSanity(result);
         } else {
           console.error("Failed to fetch payment data:", response.statusText);
         }
@@ -35,58 +43,42 @@ const SuccessPage = () => {
       amount: number;
       service: string;
     }
-    
-    const postDataToStrapi = async (paymentData: Record<string, Payment>) => {
+
+    const postDataToSanity = async (paymentData: Record<string, Payment>) => {
       try {
         const entries = Object.entries(paymentData);
-    
+
         for (const [email, payment] of entries) {
-          const checkResponse = await fetch(`${STRAPI_API_URL}?filters[name]=${payment.name}&filters[amount]=${payment.amount}&filters[service]=${payment.service}`, {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${STRAPI_API_KEY}`,
-            },
-          });
-    
-          if (!checkResponse.ok) {
-            const errorText = await checkResponse.text();
-            console.error(`Failed to check for duplicate entry for ${payment.name}:`, errorText);
+
+          const query = `*[_type == "history" && name == $name && amount == $amount && service == $service][0]`;
+          const params = {
+            name: payment.name,
+            amount: payment.amount,
+            service: payment.service,
+          };
+
+          const existingEntry = await sanityClient.fetch(query, params);
+
+          if (existingEntry) {
+            console.log(`Entry for ${payment.name} already exists.`);
             continue;
           }
-    
-          const checkData = await checkResponse.json();
-          if (checkData.data && checkData.data.length > 0) {
-            continue;
-          }
-    
-          const postResponse = await fetch(STRAPI_API_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${STRAPI_API_KEY}`,
-            },
-            body: JSON.stringify({
-              data: {
-                name: payment.name,
-                email: payment.email,
-                amount: payment.amount,
-                service: payment.service,
-              },
-            }),
+
+          await sanityClient.create({
+            _type: "history",
+            name: payment.name,
+            email: payment.email,
+            amount: payment.amount,
+            service: payment.service,
           });
-    
-          if (!postResponse.ok) {
-            const errorText = await postResponse.text();
-            console.error(`Failed to post to Strapi for ${payment.name}:`, errorText);
-          } else {
-            const responseData = await postResponse.json();
-          }
+
+          console.log(`Successfully added entry for ${payment.name}.`);
         }
       } catch (error) {
-        console.error("Error posting data to Strapi:", error);
+        console.error("Error posting data to Sanity:", error);
       }
     };
-    
+
     fetchPaymentData();
   }, []);
 

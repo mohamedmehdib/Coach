@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { postToStrapi } from "../../../utils/postToStrapi";
 
-const FLASK_API_URL = "http://127.0.0.1:5000/api/create-payment";
+
+const FLASK_API_URL = `${process.env.NEXT_PUBLIC_FLASK_API_URL}/api/create-payment`;
 
 interface PaymentRequestBody {
   name: string;
@@ -36,7 +36,6 @@ export async function POST(req: Request) {
     }
 
     const paymentData = await paymentResponse.json();
-    const strapiResponse = await postToStrapi({ name, email, amount, service });
 
     return NextResponse.json({
       paymentUrl: paymentData.paymentUrl,

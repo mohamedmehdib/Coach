@@ -3,16 +3,19 @@
 import { useState, useEffect, FormEvent } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation"; // Import the useRouter hook
+import { useRouter } from "next/navigation";
 import BackButton from "../../BackButton";
 import Accordion from "../Accordion";
 import Footer from "../../Footer";
 import Loading from "../../Loading";
 
-const STRAPI_API_KEY = process.env.NEXT_PUBLIC_STRAPI_API_KEY;
+const SANITY_PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
+const SANITY_DATASET = process.env.NEXT_PUBLIC_SANITY_DATASET;
+const SANITY_API_VERSION = "2024-12-15";
+const SANITY_TOKEN = process.env.NEXT_PUBLIC_SANITY_TOKEN;
 
-if (!STRAPI_API_KEY) {
-  console.error("STRAPI_API_KEY is not defined. Check your environment variables.");
+if (!SANITY_PROJECT_ID || !SANITY_DATASET || !SANITY_API_VERSION || !SANITY_TOKEN) {
+  console.error("Sanity environment variables are missing. Check your .env.local file.");
 }
 
 interface FormData {
@@ -23,19 +26,19 @@ interface FormData {
 }
 
 interface Service {
-  id: number;
+  _id: string;
   name: string;
   price: number;
 }
 
 export default function Payment({ params }: { params: Promise<{ name: string }> }) {
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
   const { data: session } = useSession();
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [wait, setWait] = useState(false);
   const [resolvedParams, setResolvedParams] = useState<{ name: string } | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
@@ -45,12 +48,9 @@ export default function Payment({ params }: { params: Promise<{ name: string }> 
     service: "",
   });
 
-  const handleError = (errorMessage: string, additionalInfo?: any) => {
-
-  
+  const handleError = () => {
     router.push(`/error?message=An unexpected error occurred. Please try again later.`);
   };
-  
 
   useEffect(() => {
     setMounted(true);
@@ -60,7 +60,8 @@ export default function Payment({ params }: { params: Promise<{ name: string }> 
         const resolved = await params;
         setResolvedParams(resolved);
       } catch (err) {
-        handleError("Failed to resolve parameters.", err);
+        console.error(err);
+        handleError();
       }
     };
     resolveParams();
@@ -69,10 +70,13 @@ export default function Payment({ params }: { params: Promise<{ name: string }> 
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch("http://localhost:1337/api/services", {
+        const query = encodeURIComponent(`*[_type == "service"]{_id, name, price}`);
+        const url = `https://${SANITY_PROJECT_ID}.api.sanity.io/v${SANITY_API_VERSION}/data/query/${SANITY_DATASET}?query=${query}`;
+
+        const response = await fetch(url, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${STRAPI_API_KEY}`,
+            Authorization: `Bearer ${SANITY_TOKEN}`,
           },
         });
 
@@ -81,9 +85,10 @@ export default function Payment({ params }: { params: Promise<{ name: string }> 
         }
 
         const data = await response.json();
-        setServices(data.data);
-      } catch (err: any) {
-        handleError(err.message || "An unknown error occurred while fetching services.");
+        setServices(data.result);
+      } catch (err: unknown) {
+        console.error(err);
+        handleError();
       } finally {
         setLoading(false);
       }
@@ -130,23 +135,27 @@ export default function Payment({ params }: { params: Promise<{ name: string }> 
   }
 
   const handleSubmit = async (e: FormEvent) => {
+    setWait(true);
     e.preventDefault();
 
     if (!session) {
-      window.location.href = "./Profile";
+      window.location.href = "../Profile";
       return;
     }
 
+    const FLASK_API_URL = process.env.NEXT_PUBLIC_FLASK_API_URL;
+
     try {
-      const response = await axios.post<{ paymentUrl: string }>("http://localhost:5000/api/create-payment", formData);
+      const response = await axios.post<{ paymentUrl: string }>(`${FLASK_API_URL}/api/create-payment`, formData);
 
       if (response.data.paymentUrl) {
         window.location.href = response.data.paymentUrl;
       } else {
-        handleError("Payment URL not found in response");
+        handleError();
       }
     } catch (err: any) {
-      handleError("Error creating payment.", err);
+      console.error(err);
+      handleError();
     }
   };
 
@@ -173,8 +182,9 @@ export default function Payment({ params }: { params: Promise<{ name: string }> 
 
       <div className="flex justify-center">
         <button
-          className="p-5 rounded-2xl w-fit my-10 bg-zinc-600 text-gray-300"
+          className="p-5 rounded-2xl w-fit my-10 bg-zinc-600 disabled:bg-zinc-400 duration-500 text-gray-300"
           type="submit"
+          disabled={wait}
         >
           Reserve session {formData.amount || "N/A"}dt
         </button>

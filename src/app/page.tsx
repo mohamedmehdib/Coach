@@ -10,13 +10,13 @@ export default function Home() {
   return (
     <React.StrictMode>
       <div>
-      <Navbar/>
-      <Hero/>
-      <Study/>
-      <Services/>
-      <Contact/>
-      <Footer/>
-    </div>
+        <Navbar/>
+        <Hero/>
+        <Study/>
+        <Services/>
+        <Contact/>
+        <Footer/>
+      </div>
     </React.StrictMode>
   );
 }

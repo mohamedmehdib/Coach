@@ -9,14 +9,23 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@datocms/cda-client": "^0.2.5",
+    "@sanity/icons": "^3.5.2",
+    "@sanity/image-url": "^1.1.0",
+    "@sanity/vision": "^3.67.1",
     "axios": "^1.7.9",
+    "datocms-client": "^3.5.24",
     "next": "15.0.3",
     "next-auth": "^5.0.0-beta.25",
+    "next-sanity": "^9.8.27",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-feather": "^2.0.10",
+    "react-is": "^19.0.0",
     "react-scroll": "^1.9.0",
-    "react-typed": "^2.0.12"
+    "react-typed": "^2.0.12",
+    "sanity": "^3.67.1",
+    "styled-components": "^6.1.13"
   },
   "devDependencies": {
     "@types/node": "^20",
